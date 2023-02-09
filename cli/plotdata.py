@@ -19,7 +19,7 @@ import data_analysis.data_computation, data_analysis.data_extraction, data_analy
     help="A 2-tuple, consisting of Trial folder path and desired trial label. Required. You can pass this option multiple times to plot multiple trials."
 )
 @click.option(
-    '-g', '--grating-angles',
+    '-g', '--grating-angle',
     nargs=1,
     type=click.FLOAT,
     multiple=True,
