@@ -16,7 +16,7 @@ import data_analysis.data_computation, data_analysis.data_extraction, data_analy
     multiple=True,
     required=True,
     type=(click.Path(exists=True, dir_okay=True, readable=True, path_type=Path), str),
-    help="A 2-tuple, consisting of Trial folder path and desired trial label. Required. You can pass this option multiple times to plot multiple trials."
+    help="A 2-tuple, consisting of Trial folder path and desired trial label. You can pass this option multiple times to plot multiple trials. Trial folder must contain a data.csv file and a computation_parameters.csv file. Example formatting for these files is available at https://github.com/Abdulrahman-Annaba/Data-Analysis."
 )
 @click.option(
     '-g', '--grating-angle',
@@ -59,6 +59,10 @@ def main(
 ):
     """
     Extract, analyze, and plot diffraction grating trials.
+
+    Example usage:
+
+    python main.py --show-figure --reuse-figure --scale 1000000 -t path/to/trial_1_folder "1st Trial" -t path/to/trial_2_folder "2nd Trial" -g -50 -g 0 -g 50
     """
 
     # TODO: make this code less repetitive (if it matters)
