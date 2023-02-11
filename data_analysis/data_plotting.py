@@ -97,8 +97,7 @@ def plot_powers_vs_mirror_angle(data:dict, figure_number:int, **kwargs):
     # Loop over grating angles and their respective data
     for grating_angle, powers_vs_mirror_angle in data.items():
         # Set label_prefix if provided, otherwise make it an empty string
-        # label_prefix = f"{label_prefix}: " if label_prefix is not None else ""
-        label_prefix = ""
+        label_prefix = label_prefix if label_prefix is not None else ""
         # Plot the power data (Power A, power B, and Incident Power vs. mirror angle)
         # My crappy reasons for why I chose the markers I chose:
         # Chose . for power A's marker just because it's the first.
@@ -115,7 +114,5 @@ def plot_powers_vs_mirror_angle(data:dict, figure_number:int, **kwargs):
     plt.xlabel('mirror angle ($^\circ$)')
     plt.yscale("log")
     plt.ylabel('$log_{10}$(power) ($\mu$W)')
-    # Set title to individual trial label and the grating angle for every plotted trial.
-    plt.title(f"Grating angles: {', '.join([k for k in data.keys()])}")
     plt.suptitle("Powers vs. mirror angle")
     return

@@ -71,13 +71,14 @@ class Trial:
             if background_threshold:
                 efficiency_vs_mirror_angle = efficiency_vs_mirror_angle[efficiency_vs_mirror_angle[:, 1] > background_threshold]
             
-            # Label each series as trial_label: grating angle
+            # Label each series as grating angle, no trial label
             result.update(
                 {
-                f"{self.trial_label}: {str(grating_angle-self.grating_angle_offset)}" : efficiency_vs_mirror_angle 
+                f"{str(grating_angle-self.grating_angle_offset)}" : efficiency_vs_mirror_angle 
                 }
             )
         
+        # Return results
         return result
     
 
@@ -149,7 +150,7 @@ class Trial:
 
             result.update(
                 {
-                    f"{self.trial_label}: {str(grating_angle-self.grating_angle_offset)}" : powers_vs_mirror_angle
+                    f"{str(grating_angle-self.grating_angle_offset)}" : powers_vs_mirror_angle
                 }
             )
         

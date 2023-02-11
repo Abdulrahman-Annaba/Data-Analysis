@@ -51,7 +51,7 @@ import data_analysis.data_computation, data_analysis.data_extraction, data_analy
 )
 def main(
     trial: Union[Tuple[Tuple[Path, str]], Tuple[Path, str]],
-    grating_angles: Union[List[float], float],
+    grating_angle: Union[List[float], float],
     scale: float,
     show_figure: bool,
     save_figure: bool,
@@ -97,20 +97,20 @@ def main(
                     trial_name=trial_label
                 )
                 # Compute the powers vs mirror angles data
-                power_vs_mirror_angle = trial_instance.compute_powers_vs_mirror_angle(grating_angles, power_scale_factor=scale)
+                power_vs_mirror_angle = trial_instance.compute_powers_vs_mirror_angle(grating_angle, power_scale_factor=scale)
                 # Compute the efficiency vs mirror angle data
-                efficiency_vs_mirror_angle = trial_instance.compute_efficiency_vs_mirror_angle(grating_angles)
+                efficiency_vs_mirror_angle = trial_instance.compute_efficiency_vs_mirror_angle(grating_angle)
                 # Compute the efficiency vs grating angle data
-                efficiency_vs_grating_angle = trial_instance.compute_efficiency_vs_grating_angle(grating_angles)
+                efficiency_vs_grating_angle = trial_instance.compute_efficiency_vs_grating_angle(grating_angle)
                 # If we don't want to reuse the figures for the given trials, get the next valid figure number for each plot and plot.
                 if not reuse_figure:
-                    data_analysis.data_plotting.plot_powers_vs_mirror_angle(power_vs_mirror_angle, next(power_vs_mirror_angle_figure))
-                    data_analysis.data_plotting.plot_efficiency_vs_mirror_angle(efficiency_vs_mirror_angle, next(efficiency_vs_mirror_angle_figure))
+                    data_analysis.data_plotting.plot_powers_vs_mirror_angle(power_vs_mirror_angle, next(power_vs_mirror_angle_figure), label_prefix=f"{trial_instance.trial_label}: ")
+                    data_analysis.data_plotting.plot_efficiency_vs_mirror_angle(efficiency_vs_mirror_angle, next(efficiency_vs_mirror_angle_figure), label_prefix=f"{trial_instance.trial_label}: ")
                     data_analysis.data_plotting.plot_efficiency_vs_grating_angle(efficiency_vs_grating_angle, next(efficiency_vs_grating_angle_figure), label=trial_instance.trial_label)
                 else:
                     # Just plot the data on the same figure
-                    data_analysis.data_plotting.plot_powers_vs_mirror_angle(power_vs_mirror_angle, power_vs_mirror_angle_figure)
-                    data_analysis.data_plotting.plot_efficiency_vs_mirror_angle(efficiency_vs_mirror_angle, efficiency_vs_mirror_angle_figure)
+                    data_analysis.data_plotting.plot_powers_vs_mirror_angle(power_vs_mirror_angle, power_vs_mirror_angle_figure, label_prefix=f"{trial_instance.trial_label}: ")
+                    data_analysis.data_plotting.plot_efficiency_vs_mirror_angle(efficiency_vs_mirror_angle, efficiency_vs_mirror_angle_figure, label_prefix=f"{trial_instance.trial_label}: ")
                     data_analysis.data_plotting.plot_efficiency_vs_grating_angle(efficiency_vs_grating_angle, efficiency_vs_grating_angle_figure, label=trial_instance.trial_label)
 
         # Show the figures, if requested.
@@ -135,14 +135,14 @@ def main(
                 trial_name=trial_label
             )
             # Compute the powers vs mirror angles data
-            power_vs_mirror_angle = trial_instance.compute_powers_vs_mirror_angle(grating_angles, power_scale_factor=scale)
+            power_vs_mirror_angle = trial_instance.compute_powers_vs_mirror_angle(grating_angle, power_scale_factor=scale)
             # Compute the efficiency vs mirror angle data
-            efficiency_vs_mirror_angle = trial_instance.compute_efficiency_vs_mirror_angle(grating_angles)
+            efficiency_vs_mirror_angle = trial_instance.compute_efficiency_vs_mirror_angle(grating_angle)
             # Compute the efficiency vs grating angle data
-            efficiency_vs_grating_angle = trial_instance.compute_efficiency_vs_grating_angle(grating_angles)
+            efficiency_vs_grating_angle = trial_instance.compute_efficiency_vs_grating_angle(grating_angle)
             # Plot the data
-            data_analysis.data_plotting.plot_powers_vs_mirror_angle(power_vs_mirror_angle, power_vs_mirror_angle_figure)
-            data_analysis.data_plotting.plot_efficiency_vs_mirror_angle(efficiency_vs_mirror_angle, efficiency_vs_mirror_angle_figure)
+            data_analysis.data_plotting.plot_powers_vs_mirror_angle(power_vs_mirror_angle, power_vs_mirror_angle_figure, label_prefix=f"{trial_instance.trial_label}: ")
+            data_analysis.data_plotting.plot_efficiency_vs_mirror_angle(efficiency_vs_mirror_angle, efficiency_vs_mirror_angle_figure, label_prefix=f"{trial_instance.trial_label}: ")
             data_analysis.data_plotting.plot_efficiency_vs_grating_angle(efficiency_vs_grating_angle, efficiency_vs_grating_angle_figure, label=trial_instance.trial_label)
             # Show the figures, if requested.
             if show_figure:
