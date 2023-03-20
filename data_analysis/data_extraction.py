@@ -8,10 +8,13 @@ import numpy
 # Import the data_computation module
 import data_analysis.data_computation as data_computation
 
+
+class NoPolarizationSpecifiedError(Exception):
+    """Error to be raised if no polarization is found in the dataset"""
+    pass
+
 def extract_trial_info(
     trial_folder: Path,
-    incident_power_function,
-    efficiency_function,
     power_a_column:int = 1,
     power_b_column:int = 2,
     grating_angle_column:int = 3,
@@ -24,7 +27,8 @@ def extract_trial_info(
     # Read in the computation parameters csv file as a pandas dataframe (basically like excel sheet)
     computation_parameters = pandas.read_csv(trial_folder / "computation_parameters.csv", index_col=0)
     # Select a portion of the computation_parameters dataframe that contains the reflectivity and transmittivity coefficients for the glass slide (as a pandas dataframe)
-    slide_coefficients = computation_parameters.loc[["A", "B"]][["R", "T"]]
+    slide_coefficients = computation_parameters.loc[["A", "B"]][["RH", "TH", "RV", "TV"]]
+    polarization:str = computation_parameters.loc["A"]["Polarization"]
     # Select the grating angle offset from the computation_parameters csv file
     grating_angle_offset = computation_parameters["Grating Angle Offset"].loc["A"] #For shifting the grating motor angle's origin to set incidence angle to zero rather than something else
     # Select the background power for sensors A and B from the computation_parameters csv file
@@ -33,12 +37,23 @@ def extract_trial_info(
     # If no trial name is specified, use the name of the folder as the trial_label
     trial_label = trial_name if trial_name != "" else trial_folder.name
 
+    # get the appropriate efficiency and incident power functions
+    efficiency_function = 0
+    incident_power_function = 0
+    if polarization.startswith("H"):
+        efficiency_function = data_computation.default_horizontal_efficiency
+        incident_power_function = data_computation.default_horizontal_incident_power
+    elif polarization.startswith("V"):
+        efficiency_function = data_computation.default_vertical_efficiency
+        incident_power_function = data_computation.default_vertical_incident_power
+    else:
+        raise NoPolarizationSpecifiedError
     # Construct the Trial object from the data_computation module.
     return data_computation.Trial(
         trial_label,
         data,
-        data_computation.default_incident_power,
-        data_computation.default_efficiency,
+        incident_power_function,
+        efficiency_function,
         slide_coefficients,
         sensor_a_background,
         sensor_b_background,
@@ -56,7 +71,7 @@ def test_extract_trial_info():
     trial = extract_trial_info(
         trial_folder,
         data_computation.default_efficiency,
-        data_computation.default_incident_power
+        data_computation.default_horizontal_incident_power
     )
     # Assert stuff. If these fail, that indicates that the extract_trial_info function has errored or the trial folder does not contain a computation_parameters.csv file in the proper format.
     assert trial.trial_label == "GH13-12V (B to the right) (3)"
