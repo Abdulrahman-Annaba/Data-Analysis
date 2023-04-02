@@ -67,6 +67,12 @@ import data_analysis.data_computation, data_analysis.data_extraction, data_analy
     type=click.BOOL,
     help="Whether or not to plot multiple trials to the same figures or to reuse figures. Default True."
 )
+@click.option(
+    '-d/-nd', '--print-data/--no-print-data',
+    default=False,
+    type=click.BOOL,
+    help="Whether or not to print data to standard output. Default False."
+)
 def main(
     trial: Tuple[Tuple[Path, str]],
     grating_angle: Tuple[float],
@@ -76,7 +82,8 @@ def main(
     scale: float,
     show_figure: bool,
     save_figure: bool,
-    reuse_figure: bool
+    reuse_figure: bool,
+    print_data: bool,
 ):
     """
     Extract, analyze, and plot diffraction grating trials.
@@ -127,6 +134,10 @@ def main(
             efficiency_vs_mirror_angle = trial_instance.compute_efficiency_vs_mirror_angle(grating_angles_to_use=grating_angle)
             # Compute the efficiency vs grating angle data
             efficiency_vs_grating_angle = trial_instance.compute_efficiency_vs_grating_angle(grating_angles_to_use=grating_angle)
+            if print_data:
+                print(trial_label, power_vs_mirror_angle)
+                print(trial_label, efficiency_vs_mirror_angle)
+                print(trial_label, efficiency_vs_grating_angle)
             # If we don't want to reuse the figures for the given trials, get the next valid figure number for each plot and plot.
             if not reuse_figure:
                 if power_plot:
