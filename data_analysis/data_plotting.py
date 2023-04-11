@@ -37,20 +37,25 @@ def plot_efficiency_vs_mirror_angle(data, figure_number:int, **kwargs):
     plt.suptitle("Efficiency vs. mirror angle")
     return
 
-def plot_efficiency_vs_grating_angle(data:np.array, figure_number:int, **kwargs):
-    """Plots efficiency vs grating angle for the provided data. Requires the figure number to plot on.
+def plot_efficiency_vs_incident_angle(data:np.array, figure_number:int, **kwargs):
+    """Plots efficiency vs incident angle for the provided data. Requires the figure number to plot on.
     
     kwargs:
-    label: label to add to figure"""
+    label: label to add to figure
+    spr_angles: a dictionary of diffraction orders and incident angles at which SPR can occur. When provided, adds vertical lines at these incident angles demonstrating locations of theoretical predictions for SPR"""
     label = kwargs.pop("label", None)
+    spr_angles = kwargs.pop("spr_angles", None)
     plt.figure(figure_number)
     if label is not None:
         plt.plot(data[:, 0], data[:, 1], label=label) #plot data
     else:
         plt.plot(data[:, 0], data[:, 1]) #plot data
-    plt.title("Efficiency vs. grating angle")
+    if spr_angles is not None:
+        for order, spr_angle in spr_angles.items():
+            plt.axvline(x=spr_angle, color='b', label=f"{label}: SPR order {order}")
+    plt.title("Efficiency vs. incident angle")
     # plt.ticklabel_format(axis="y", style="sci", scilimits=(0,0))
-    plt.xlabel('grating angle ($^\circ$)')
+    plt.xlabel('incident angle ($^\circ$)')
     plt.ylabel('efficiency')
     plt.grid(which="both", axis="both")
     plt.legend()

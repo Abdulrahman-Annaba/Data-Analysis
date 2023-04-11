@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 # Import modules from the data analysis module
 import data_analysis.data_computation, data_analysis.data_extraction, data_analysis.data_plotting
-
+import data_analysis.theory as theoretical
 # Define a CLI command, and the valid options. Most of these are self-explanatory. For every option, there is an associated parameter in the actual function below.
 @click.command()
 @click.option(
@@ -67,6 +67,12 @@ import data_analysis.data_computation, data_analysis.data_extraction, data_analy
     type=click.BOOL,
     help="Whether or not to plot multiple trials to the same figures or to reuse figures. Default True."
 )
+@click.option(
+    '-th/-nth', '--theory/--no-theory',
+    default=False,
+    type=click.BOOL,
+    help="Whether or not to include theoretical predictions for the locations of SPR. Default False."
+)
 def main(
     trial: Tuple[Tuple[Path, str]],
     grating_angle: Tuple[float],
@@ -76,7 +82,8 @@ def main(
     scale: float,
     show_figure: bool,
     save_figure: bool,
-    reuse_figure: bool
+    reuse_figure: bool,
+    theory: bool
 ):
     """
     Extract, analyze, and plot diffraction grating trials.
@@ -101,7 +108,7 @@ def main(
     
     # If we want to reuse the figures
     if reuse_figure:
-        (power_vs_mirror_angle_figure, efficiency_vs_mirror_angle_figure, efficiency_vs_grating_angle_figure) = (0, 1, 2)
+        (power_vs_mirror_angle_figure, efficiency_vs_mirror_angle_figure, efficiency_vs_incident_angle_figure) = (0, 1, 2)
     # If we're going to make unique figures for each trial
     else:
         # compute number of figures needed
@@ -109,7 +116,7 @@ def main(
         # specify figure numbers for each type of plot
         power_vs_mirror_angle_figure = iter(range(0, int(number_of_figures/3)))
         efficiency_vs_mirror_angle_figure = iter(range(int(number_of_figures/3), int(2*number_of_figures/3)))
-        efficiency_vs_grating_angle_figure = iter(range(int(2*number_of_figures/3), int(number_of_figures)))
+        efficiency_vs_incident_angle_figure = iter(range(int(2*number_of_figures/3), int(number_of_figures)))
     
     # Loop over the trials provided
     for ind_trial in trial:
@@ -121,12 +128,16 @@ def main(
                 trial_folder,
                 trial_name=trial_label
             )
+            # If we want theoretical values, initialize the theoretical gratings.
+            if theory:
+                grating = data_analysis.data_extraction.extract_grating_info(trial_folder)
+                spr_angles = grating.spr_angles(10)
             # Compute the powers vs mirror angles data
             power_vs_mirror_angle = trial_instance.compute_powers_vs_mirror_angle(grating_angles_to_use=grating_angle, power_scale_factor=scale)
             # Compute the efficiency vs mirror angle data
             efficiency_vs_mirror_angle = trial_instance.compute_efficiency_vs_mirror_angle(grating_angles_to_use=grating_angle)
-            # Compute the efficiency vs grating angle data
-            efficiency_vs_grating_angle = trial_instance.compute_efficiency_vs_grating_angle(grating_angles_to_use=grating_angle)
+            # Compute the efficiency vs incident angle data
+            efficiency_vs_incident_angle = trial_instance.compute_efficiency_vs_incident_angle(grating_angles_to_use=grating_angle)
             # If we don't want to reuse the figures for the given trials, get the next valid figure number for each plot and plot.
             if not reuse_figure:
                 if power_plot:
@@ -134,7 +145,10 @@ def main(
                 if mirror_plot:
                     data_analysis.data_plotting.plot_efficiency_vs_mirror_angle(efficiency_vs_mirror_angle, next(efficiency_vs_mirror_angle_figure), label_prefix=f"{trial_instance.trial_label}: ")
                 if grating_plot:
-                    data_analysis.data_plotting.plot_efficiency_vs_grating_angle(efficiency_vs_grating_angle, next(efficiency_vs_grating_angle_figure), label=trial_instance.trial_label)
+                    if theory:
+                        data_analysis.data_plotting.plot_efficiency_vs_incident_angle(efficiency_vs_incident_angle, next(efficiency_vs_incident_angle_figure), label=trial_instance.trial_label, spr_angles=spr_angles)
+                    else:
+                        data_analysis.data_plotting.plot_efficiency_vs_incident_angle(efficiency_vs_incident_angle, next(efficiency_vs_incident_angle_figure), label=trial_instance.trial_label)
             else:
                 # Just plot the data on the same figure
                 if power_plot:
@@ -142,7 +156,11 @@ def main(
                 if mirror_plot:
                     data_analysis.data_plotting.plot_efficiency_vs_mirror_angle(efficiency_vs_mirror_angle, efficiency_vs_mirror_angle_figure, label_prefix=f"{trial_instance.trial_label}: ")
                 if grating_plot:
-                    data_analysis.data_plotting.plot_efficiency_vs_grating_angle(efficiency_vs_grating_angle, efficiency_vs_grating_angle_figure, label=trial_instance.trial_label)
+                    if theory:
+                        data_analysis.data_plotting.plot_efficiency_vs_incident_angle(efficiency_vs_incident_angle, efficiency_vs_incident_angle_figure, label=trial_instance.trial_label, spr_angles=spr_angles)
+                    else:
+                        data_analysis.data_plotting.plot_efficiency_vs_incident_angle(efficiency_vs_incident_angle, efficiency_vs_incident_angle_figure, label=trial_instance.trial_label)
+
 
     # Show the figures, if requested.
     if show_figure:

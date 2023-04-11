@@ -7,10 +7,19 @@ import numpy
 
 # Import the data_computation module
 import data_analysis.data_computation as data_computation
+import data_analysis.theory as theoretical
 
 
 class NoPolarizationSpecifiedError(Exception):
     """Error to be raised if no polarization is found in the dataset"""
+    pass
+
+class GratingParameterFileError(Exception):
+    """Error to be raised if there is an error reading grating_parameters.csv file."""
+    pass
+
+class MissingGratingParameters(Exception):
+    """Error to be raised if there are missing parameters in the grating_parameters.csv file."""
     pass
 
 def extract_trial_info(
@@ -63,6 +72,20 @@ def extract_trial_info(
         mirror_angle_column=mirror_angle_column
     )
 
+def extract_grating_info(trial_folder: Path):
+    """Extracts grating parameters and returns an instance of Grating."""
+    try:
+        grating_params = pandas.read_csv(trial_folder / "grating_parameters.csv")
+    except:
+        raise GratingParameterFileError
+    try:
+        groove_spacing = int(grating_params["groove_spacing"])
+        e_m = float(grating_params["e_m"])
+        wavelength = float(grating_params["wavelength"])
+        e_d = float(grating_params["e_d"])
+    except KeyError:
+        raise MissingGratingParameters
+    return theoretical.Grating(groove_spacing, e_m, wavelength, e_d)
 
 def test_extract_trial_info():
     """Simple test to check that some of the trial info is correct. Expects the directory above the data analysis directory to contain the Trials directory, and inside the Trials directory the GH13-12V (B to the right) (3), which contains the trial data, parameters, and information."""
@@ -79,3 +102,12 @@ def test_extract_trial_info():
     assert trial.slide_coefficients.loc["A"]["T"] == 0.90820
     assert trial.slide_coefficients.loc["B"]["R"] == 0.05778
     assert trial.slide_coefficients.loc["B"]["T"] == 0.90710
+
+def test_extract_grating():
+    """Simple test"""
+    trial_folder = Path("../Trials/GH13-12V (DOWN) (5)")
+    grating = extract_grating_info(trial_folder)
+    assert isinstance(grating.e_d, float)
+    assert isinstance(grating.e_m, float)
+    assert isinstance(grating.groove_spacing, int)
+    assert isinstance(grating.wavelength, float)
