@@ -79,10 +79,10 @@ def extract_grating_info(trial_folder: Path):
     except:
         raise GratingParameterFileError
     try:
-        groove_spacing = grating_params["groove_spacing"]
-        e_m = grating_params["e_m"]
-        wavelength = grating_params["wavelength"]
-        e_d = grating_params["e_d"]
+        groove_spacing = int(grating_params["groove_spacing"])
+        e_m = float(grating_params["e_m"])
+        wavelength = float(grating_params["wavelength"])
+        e_d = float(grating_params["e_d"])
     except KeyError:
         raise MissingGratingParameters
     return theoretical.Grating(groove_spacing, e_m, wavelength, e_d)
@@ -102,3 +102,12 @@ def test_extract_trial_info():
     assert trial.slide_coefficients.loc["A"]["T"] == 0.90820
     assert trial.slide_coefficients.loc["B"]["R"] == 0.05778
     assert trial.slide_coefficients.loc["B"]["T"] == 0.90710
+
+def test_extract_grating():
+    """Simple test"""
+    trial_folder = Path("../Trials/GH13-12V (DOWN) (5)")
+    grating = extract_grating_info(trial_folder)
+    assert isinstance(grating.e_d, float)
+    assert isinstance(grating.e_m, float)
+    assert isinstance(grating.groove_spacing, int)
+    assert isinstance(grating.wavelength, float)
