@@ -123,12 +123,12 @@ class Trial:
         
         return result
 
-    def compute_efficiency_vs_grating_angle(self, 
+    def compute_efficiency_vs_incident_angle(self, 
         grating_angles_to_use,
         remove_unphysical_points:bool=False,
         background_threshold:float=0,
         custom_computer=0):
-        """Computes the efficiency vs grating angle for the given grating angles. The provided grating angles must be explicitly present in the data.
+        """Computes the efficiency vs incident angle for the given grating angles. The provided grating angles must be explicitly present in the data.
         
         If remove_unphysical_points is True, this removes the points that have efficiencies outside the domain [0, 1]. This defaults to False.
         If background_threshold is provided, efficiencies below this number are omitted.
@@ -172,19 +172,21 @@ class Trial:
             )
         
         # Initialize array
-        efficiency_vs_grating_angle = ma.zeros((1, 2))
+        efficiency_vs_incident_angle = ma.zeros((1, 2))
         # Loop over data
         for grating_angle, efficiency_data in efficiencies_vs_mirror_angle.items():
             # Make it a float (since we got this from the key in a dictionary)
             grating_angle = float(grating_angle)
+            # Grating angle and incident angle are related simply by an axis inversion.
+            incident_angle = -1*grating_angle
             # Sum efficiencies over mirror angles to get one value per grating angle
             efficiency = ma.sum(efficiency_data[:, 1], axis=0)
-            element = np.column_stack((grating_angle, efficiency))
-            efficiency_vs_grating_angle = np.append(efficiency_vs_grating_angle, element, axis=0)
+            element = np.column_stack((incident_angle, efficiency))
+            efficiency_vs_incident_angle = np.append(efficiency_vs_incident_angle, element, axis=0)
         
         # Remove initialize value
-        efficiency_vs_grating_angle = efficiency_vs_grating_angle[1:]
-        return efficiency_vs_grating_angle
+        efficiency_vs_incident_angle = efficiency_vs_incident_angle[1:]
+        return efficiency_vs_incident_angle
 
 
     def compute_powers_vs_mirror_angle(self, 
