@@ -2,13 +2,18 @@ import numpy as np
 
 class Grating:
 
-    def __init__(self, groove_spacing:int=1200, e_m:float=-46.6):
+    def __init__(self, groove_spacing:int=1200, e_m:float=-46.6, wavelength: float=640, e_d:float=1):
         """Creates a grating object.
         
         :param groove_spacing: the number of grooves per millimeter in the grating.
-        :param e_m: the dielectric constant of the grating material."""
+        :param e_m: the dielectric constant of the grating material.
+        :param wavelength: the wavelength of the incoming light, in nanometers.
+        :param e_d: the dielectric constant of the other medium at the grating interface.
+        """
         self.groove_spacing = groove_spacing
         self.e_m = e_m
+        self.wavelength = wavelength
+        self.e_d = e_d
     
     def find_diffraction_orders(
         self,
@@ -47,24 +52,22 @@ class Grating:
         # Return the diffraction orders and their corresponding angles
         return (diffraction_orders, diffraction_order_angles)
     
-    def spr_angles(self, wavelength: float, e_d:float, n_orders:int):
+    def spr_angles(self, n_orders:int):
         """Computes the incident angles where maximal SPR occurs up to n_orders.
         
-        :param wavelength: the wavelength of the incoming light, in nanometers.
-        :param e_d: the dielectric constant of the other medium at the grating interface.
         :param n_orders: the total number of orders to consider. This is halved to account for the negative orders.
-        :return: a list of angles in degrees where maximal SPR can occur."""
+        :return: a dictionary of order numbers and angles in degrees where maximal SPR can occur."""
 
         orders = divmod(n_orders, 2)[0]
-        constraint = ((e_d*self.e_m)/(e_d + self.e_m))**(1/2)
-        wavelength = wavelength*10**-9
+        constraint = ((self.e_d*self.e_m)/(self.e_d + self.e_m))**(1/2)
+        wavelength = self.wavelength*10**-9
         groove_spacing = self.groove_spacing*10**3
 
-        result = []
+        result = dict()
         for m in range(-orders, orders + 1, 1):
             incident_angle = np.arcsin(constraint - m*wavelength*groove_spacing)*180/np.pi
             if incident_angle <= 90 and incident_angle >= -90:
-                result.append(incident_angle)
+                result.update({str(m): incident_angle})
         return result
 
     @staticmethod
@@ -89,6 +92,6 @@ if __name__ == "__main__":
 
     e_m = -46.6
     e_d = 1^2
-    grating = Grating(groove_spacing, e_m)
+    grating = Grating(groove_spacing, e_m, wavelength, e_d)
 
-    print(grating.spr_angles(640, e_d, 10))
+    print(grating.spr_angles(10))
