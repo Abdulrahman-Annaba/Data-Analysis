@@ -7,10 +7,19 @@ import numpy
 
 # Import the data_computation module
 import data_analysis.data_computation as data_computation
+import data_analysis.theory as theoretical
 
 
 class NoPolarizationSpecifiedError(Exception):
     """Error to be raised if no polarization is found in the dataset"""
+    pass
+
+class GratingParameterFileError(Exception):
+    """Error to be raised if there is an error reading grating_parameters.csv file."""
+    pass
+
+class MissingGratingParameters(Exception):
+    """Error to be raised if there are missing parameters in the grating_parameters.csv file."""
     pass
 
 def extract_trial_info(
@@ -63,6 +72,20 @@ def extract_trial_info(
         mirror_angle_column=mirror_angle_column
     )
 
+def extract_grating_info(trial_folder: Path):
+    """Extracts grating parameters and returns an instance of Grating."""
+    try:
+        grating_params = pandas.read_csv(trial_folder / "grating_parameters.csv")
+    except:
+        raise GratingParameterFileError
+    try:
+        groove_spacing = grating_params["groove_spacing"]
+        e_m = grating_params["e_m"]
+        wavelength = grating_params["wavelength"]
+        e_d = grating_params["e_d"]
+    except KeyError:
+        raise MissingGratingParameters
+    return theoretical.Grating(groove_spacing, e_m, wavelength, e_d)
 
 def test_extract_trial_info():
     """Simple test to check that some of the trial info is correct. Expects the directory above the data analysis directory to contain the Trials directory, and inside the Trials directory the GH13-12V (B to the right) (3), which contains the trial data, parameters, and information."""
