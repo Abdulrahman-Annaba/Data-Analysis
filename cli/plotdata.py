@@ -132,6 +132,7 @@ def main(
             if theory:
                 grating = data_analysis.data_extraction.extract_grating_info(trial_folder)
                 spr_angles = grating.spr_angles(10)
+                woods = grating.woods_anomaly_angles(10)
             # Compute the powers vs mirror angles data
             power_vs_mirror_angle = trial_instance.compute_powers_vs_mirror_angle(grating_angles_to_use=grating_angle, power_scale_factor=scale)
             # Compute the efficiency vs mirror angle data
@@ -146,7 +147,7 @@ def main(
                     data_analysis.data_plotting.plot_efficiency_vs_mirror_angle(efficiency_vs_mirror_angle, next(efficiency_vs_mirror_angle_figure), label_prefix=f"{trial_instance.trial_label}: ")
                 if grating_plot:
                     if theory:
-                        data_analysis.data_plotting.plot_efficiency_vs_incident_angle(efficiency_vs_incident_angle, next(efficiency_vs_incident_angle_figure), label=trial_instance.trial_label, spr_angles=spr_angles)
+                        data_analysis.data_plotting.plot_efficiency_vs_incident_angle(efficiency_vs_incident_angle, next(efficiency_vs_incident_angle_figure), label=trial_instance.trial_label, spr_angles=spr_angles, woods=woods)
                     else:
                         data_analysis.data_plotting.plot_efficiency_vs_incident_angle(efficiency_vs_incident_angle, next(efficiency_vs_incident_angle_figure), label=trial_instance.trial_label)
             else:
@@ -157,9 +158,11 @@ def main(
                     data_analysis.data_plotting.plot_efficiency_vs_mirror_angle(efficiency_vs_mirror_angle, efficiency_vs_mirror_angle_figure, label_prefix=f"{trial_instance.trial_label}: ")
                 if grating_plot:
                     if theory:
-                        data_analysis.data_plotting.plot_efficiency_vs_incident_angle(efficiency_vs_incident_angle, efficiency_vs_incident_angle_figure, label=trial_instance.trial_label, spr_angles=spr_angles)
+                        data_analysis.data_plotting.plot_efficiency_vs_incident_angle(efficiency_vs_incident_angle, efficiency_vs_incident_angle_figure, label=trial_instance.trial_label, spr_angles=spr_angles, woods=woods)
                     else:
                         data_analysis.data_plotting.plot_efficiency_vs_incident_angle(efficiency_vs_incident_angle, efficiency_vs_incident_angle_figure, label=trial_instance.trial_label)
+        # To prevent multiple plots of the theoretical values
+        theory = False
 
 
     # Show the figures, if requested.
