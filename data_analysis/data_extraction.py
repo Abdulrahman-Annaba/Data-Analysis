@@ -83,9 +83,10 @@ def extract_grating_info(trial_folder: Path):
         e_m = float(grating_params["e_m"])
         wavelength = float(grating_params["wavelength"])
         e_d = float(grating_params["e_d"])
+        epsilon = float(grating_params["epsilon"])
     except KeyError:
         raise MissingGratingParameters
-    return theoretical.Grating(groove_spacing, e_m, wavelength, e_d)
+    return theoretical.Grating(groove_spacing, e_m, wavelength, e_d, epsilon)
 
 def test_extract_trial_info():
     """Simple test to check that some of the trial info is correct. Expects the directory above the data analysis directory to contain the Trials directory, and inside the Trials directory the GH13-12V (B to the right) (3), which contains the trial data, parameters, and information."""
@@ -111,3 +112,4 @@ def test_extract_grating():
     assert isinstance(grating.e_m, float)
     assert isinstance(grating.groove_spacing, int)
     assert isinstance(grating.wavelength, float)
+    assert isinstance(grating.epsilon)
