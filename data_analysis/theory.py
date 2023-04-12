@@ -89,8 +89,12 @@ class Grating:
         result = dict()
         for m in range(-orders, orders + 1, 1):
             incident_angle = np.arcsin(m*wavelength*groove_spacing/np.cos(epsilon) + 1) * 180/np.pi
-            if incident_angle <= 90 and incident_angle >= -90:
+            if incident_angle < 90 and incident_angle > -90:
                 result.update({str(m): incident_angle})
+        flipped_results = dict()
+        for order, angle in result.items():
+            flipped_results.update({str(-1*int(order)) : -1*angle})
+        result.update(flipped_results)
         return result
 
     @staticmethod
