@@ -125,7 +125,7 @@ class Trial:
             )
         
         # Initialize array
-        efficiency_vs_grating_angle = np.zeros((1, 2))
+        efficiency_vs_incident_angle = np.zeros((1, 2))
         # Loop over data
         for grating_angle, efficiency_data in efficiencies_vs_mirror_angle.items():
             # Make it a float (since we got this from the key in a dictionary)
@@ -134,8 +134,8 @@ class Trial:
             incident_angle = -1*grating_angle
             # Sum efficiencies over mirror angles to get one value per grating angle
             efficiency = np.sum(efficiency_data[:, 1], axis=0)
-            element = np.column_stack((grating_angle, efficiency))
-            efficiency_vs_grating_angle = np.append(efficiency_vs_grating_angle, element, axis=0)
+            element = np.column_stack((incident_angle, efficiency))
+            efficiency_vs_incident_angle = np.append(efficiency_vs_incident_angle, element, axis=0)
         
         # Remove initialize value
         efficiency_vs_incident_angle = efficiency_vs_incident_angle[1:]
