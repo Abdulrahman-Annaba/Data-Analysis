@@ -53,11 +53,22 @@ def plot_efficiency_vs_incident_angle(data:np.array, figure_number:int, **kwargs
     else:
         plt.plot(data[:, 0], data[:, 1]) #plot data
     if spr_angles is not None:
+        # Set state variable to prevent multiple relabelings from appearing in legend
+        labeled_spr = False
         for order, spr_angle in spr_angles.items():
-            plt.axvline(x=spr_angle, color='b', label=f"{label}: SPR order {order}")
+            if not labeled_spr:
+                plt.axvline(x=spr_angle, color='b', label="SPR")
+                labeled_spr = True
+            else:
+                plt.axvline(x=spr_angle, color='b')
     if woods is not None:
+        labeled_woods = False
         for order, wood_angle in woods.items():
-            plt.axvline(x=wood_angle, color='r', label=f"{label}: Wood anomaly {order}")
+            if not labeled_woods:
+                plt.axvline(x=wood_angle, color='r', label="Wood's anomalies")
+                labeled_woods = True
+            else:
+                plt.axvline(x=wood_angle, color='r')
     plt.title("Efficiency vs. incident angle")
     # plt.ticklabel_format(axis="y", style="sci", scilimits=(0,0))
     plt.xlabel('incident angle ($^\circ$)')
