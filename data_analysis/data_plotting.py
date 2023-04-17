@@ -42,17 +42,33 @@ def plot_efficiency_vs_incident_angle(data:np.array, figure_number:int, **kwargs
     
     kwargs:
     label: label to add to figure
-    spr_angles: a dictionary of diffraction orders and incident angles at which SPR can occur. When provided, adds vertical lines at these incident angles demonstrating locations of theoretical predictions for SPR"""
+    spr_angles: a dictionary of diffraction orders and incident angles at which SPR can occur. When provided, adds vertical lines at these incident angles demonstrating locations of theoretical predictions for SPR
+    woods: a dictionary of diffraction orders and incident angles at which woods anomalies can occur. When provided, adds vertical lines at these incident angles demonstrating locations of theoretical predictions for woods anomalies"""
     label = kwargs.pop("label", None)
     spr_angles = kwargs.pop("spr_angles", None)
+    woods = kwargs.pop("woods", None)
     plt.figure(figure_number)
     if label is not None:
         plt.plot(data[:, 0], data[:, 1], label=label) #plot data
     else:
         plt.plot(data[:, 0], data[:, 1]) #plot data
     if spr_angles is not None:
+        # Set state variable to prevent multiple relabelings from appearing in legend
+        labeled_spr = False
         for order, spr_angle in spr_angles.items():
-            plt.axvline(x=spr_angle, color='b', label=f"{label}: SPR order {order}")
+            if not labeled_spr:
+                plt.axvline(x=spr_angle, color='b', label="SPR")
+                labeled_spr = True
+            else:
+                plt.axvline(x=spr_angle, color='b')
+    if woods is not None:
+        labeled_woods = False
+        for order, wood_angle in woods.items():
+            if not labeled_woods:
+                plt.axvline(x=wood_angle, color='r', label="Wood's anomalies")
+                labeled_woods = True
+            else:
+                plt.axvline(x=wood_angle, color='r')
     plt.title("Efficiency vs. incident angle")
     # plt.ticklabel_format(axis="y", style="sci", scilimits=(0,0))
     plt.xlabel('incident angle ($^\circ$)')
