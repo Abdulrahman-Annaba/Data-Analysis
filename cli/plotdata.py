@@ -73,6 +73,12 @@ import data_analysis.theory as theoretical
     type=click.BOOL,
     help="Whether or not to include theoretical predictions for the locations of SPR. Default False."
 )
+@click.option(
+    '--title',
+    default=None,
+    type=click.STRING,
+    help="Title to use for graphs. If left blank, defaults to respective plot title."
+)
 def main(
     trial: Tuple[Tuple[Path, str]],
     grating_angle: Tuple[float],
@@ -83,7 +89,8 @@ def main(
     show_figure: bool,
     save_figure: bool,
     reuse_figure: bool,
-    theory: bool
+    theory: bool,
+    title: str
 ):
     """
     Extract, analyze, and plot diffraction grating trials.
@@ -147,9 +154,9 @@ def main(
                     data_analysis.data_plotting.plot_efficiency_vs_mirror_angle(efficiency_vs_mirror_angle, next(efficiency_vs_mirror_angle_figure), label_prefix=f"{trial_instance.trial_label}: ")
                 if grating_plot:
                     if theory:
-                        data_analysis.data_plotting.plot_efficiency_vs_incident_angle(efficiency_vs_incident_angle, next(efficiency_vs_incident_angle_figure), label=trial_instance.trial_label, spr_angles=spr_angles, woods=woods)
+                        data_analysis.data_plotting.plot_efficiency_vs_incident_angle(efficiency_vs_incident_angle, next(efficiency_vs_incident_angle_figure), label=trial_instance.trial_label, spr_angles=spr_angles, woods=woods, title=title)
                     else:
-                        data_analysis.data_plotting.plot_efficiency_vs_incident_angle(efficiency_vs_incident_angle, next(efficiency_vs_incident_angle_figure), label=trial_instance.trial_label)
+                        data_analysis.data_plotting.plot_efficiency_vs_incident_angle(efficiency_vs_incident_angle, next(efficiency_vs_incident_angle_figure), label=trial_instance.trial_label, title=title)
             else:
                 # Just plot the data on the same figure
                 if power_plot:
@@ -158,9 +165,9 @@ def main(
                     data_analysis.data_plotting.plot_efficiency_vs_mirror_angle(efficiency_vs_mirror_angle, efficiency_vs_mirror_angle_figure, label_prefix=f"{trial_instance.trial_label}: ")
                 if grating_plot:
                     if theory:
-                        data_analysis.data_plotting.plot_efficiency_vs_incident_angle(efficiency_vs_incident_angle, efficiency_vs_incident_angle_figure, label=trial_instance.trial_label, spr_angles=spr_angles, woods=woods)
+                        data_analysis.data_plotting.plot_efficiency_vs_incident_angle(efficiency_vs_incident_angle, efficiency_vs_incident_angle_figure, label=trial_instance.trial_label, spr_angles=spr_angles, woods=woods, title=title)
                     else:
-                        data_analysis.data_plotting.plot_efficiency_vs_incident_angle(efficiency_vs_incident_angle, efficiency_vs_incident_angle_figure, label=trial_instance.trial_label)
+                        data_analysis.data_plotting.plot_efficiency_vs_incident_angle(efficiency_vs_incident_angle, efficiency_vs_incident_angle_figure, label=trial_instance.trial_label, title=title)
         # To prevent multiple plots of the theoretical values
         theory = False
 

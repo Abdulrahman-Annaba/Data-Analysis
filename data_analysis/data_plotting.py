@@ -41,12 +41,14 @@ def plot_efficiency_vs_incident_angle(data:np.array, figure_number:int, **kwargs
     """Plots efficiency vs incident angle for the provided data. Requires the figure number to plot on.
     
     kwargs:
-    label: label to add to figure
+    label: label to add to series
     spr_angles: a dictionary of diffraction orders and incident angles at which SPR can occur. When provided, adds vertical lines at these incident angles demonstrating locations of theoretical predictions for SPR
-    woods: a dictionary of diffraction orders and incident angles at which woods anomalies can occur. When provided, adds vertical lines at these incident angles demonstrating locations of theoretical predictions for woods anomalies"""
+    woods: a dictionary of diffraction orders and incident angles at which woods anomalies can occur. When provided, adds vertical lines at these incident angles demonstrating locations of theoretical predictions for woods anomalies
+    title: Optional string to use as the title of the plot. Default to None."""
     label = kwargs.pop("label", None)
     spr_angles = kwargs.pop("spr_angles", None)
     woods = kwargs.pop("woods", None)
+    title=kwargs.pop("title", None)
     plt.figure(figure_number)
     if label is not None:
         plt.plot(data[:, 0], data[:, 1], label=label) #plot data
@@ -69,7 +71,7 @@ def plot_efficiency_vs_incident_angle(data:np.array, figure_number:int, **kwargs
                 labeled_woods = True
             else:
                 plt.axvline(x=wood_angle, color='r')
-    plt.title("Efficiency vs. incident angle")
+    plt.title("Efficiency vs. incident angle" if title is None else title)
     # plt.ticklabel_format(axis="y", style="sci", scilimits=(0,0))
     plt.xlabel('incident angle ($^\circ$)')
     plt.ylabel('efficiency')
