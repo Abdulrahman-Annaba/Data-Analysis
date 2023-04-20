@@ -3,6 +3,7 @@
 # Import pyplot and numpy
 import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.ticker as ticker
 
 
 def plot_efficiency_vs_mirror_angle(data, figure_number:int, **kwargs):
@@ -49,11 +50,13 @@ def plot_efficiency_vs_incident_angle(data:np.array, figure_number:int, **kwargs
     spr_angles = kwargs.pop("spr_angles", None)
     woods = kwargs.pop("woods", None)
     title=kwargs.pop("title", None)
-    plt.figure(figure_number)
+    figure = plt.figure(figure_number)
     if label is not None:
-        plt.plot(data[:, 0], data[:, 1], label=label) #plot data
+        plt.plot(data[:, 0], data[:, 1], label=label)
+        plt.scatter(data[:, 0], data[:, 1]) #plot data
     else:
         plt.plot(data[:, 0], data[:, 1]) #plot data
+        plt.scatter(data[:, 0], data[:, 1])
     if spr_angles is not None:
         # Set state variable to prevent multiple relabelings from appearing in legend
         labeled_spr = False
@@ -74,8 +77,12 @@ def plot_efficiency_vs_incident_angle(data:np.array, figure_number:int, **kwargs
     plt.title("Efficiency vs. incident angle" if title is None else title)
     # plt.ticklabel_format(axis="y", style="sci", scilimits=(0,0))
     plt.xlabel('incident angle ($^\circ$)')
+    figure.axes[0].xaxis.set_major_locator(ticker.MultipleLocator(5))
+    figure.axes[0].xaxis.set_minor_locator(ticker.MultipleLocator(1))
+    figure.axes[0].yaxis.set_major_locator(ticker.MultipleLocator(0.1))
+    figure.axes[0].yaxis.set_minor_locator(ticker.MultipleLocator(0.01))
+    figure.axes[0].grid(b=True, which='major', axis='both')
     plt.ylabel('efficiency')
-    plt.grid(which="both", axis="both")
     plt.legend()
 
 def plot_powers_vs_mirror_angle(data:dict, figure_number:int, **kwargs):
