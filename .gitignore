@@ -2,3 +2,5 @@
 cli/__pycache__
 data_analysis/__pycache__
 venv
+/target
+Cargo.lock
