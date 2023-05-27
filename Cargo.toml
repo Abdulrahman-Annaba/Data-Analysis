@@ -7,3 +7,6 @@ edition = "2021"
 
 [dependencies]
 lazy_static = "1.4.0"
+ndarray = "0.15.6"
+polars = "0.29.0"
+pyo3 = "0.18.3"

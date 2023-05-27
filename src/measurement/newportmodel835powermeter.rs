@@ -1,11 +1,28 @@
-use std::collections::HashMap;
+use crate::measurement::power_measurement::{AbsoluteUncertainty, Measurement};
 use lazy_static::lazy_static;
-use crate::measurement::measurement::{AbsoluteUncertainty, Measurement};
+use std::collections::HashMap;
+
+use super::power_measurement::{Background, PowerMeterLabel};
 
 // Defines a power measurement as read from a newport model 835 power meter
 pub struct NewportModel835PowerMeterMeasurement {
     // A power measurement should have a float value
     value: f64,
+}
+
+// Define a power measurement background
+pub struct NewportModel835PowerMeterMeasurementBackground(f64);
+
+impl NewportModel835PowerMeterMeasurementBackground {
+    pub fn new(background: f64) -> NewportModel835PowerMeterMeasurementBackground {
+        NewportModel835PowerMeterMeasurementBackground(background)
+    }
+}
+
+impl Background<f64> for NewportModel835PowerMeterMeasurementBackground {
+    fn background(&self) -> &f64 {
+        &self.0
+    }
 }
 
 impl NewportModel835PowerMeterMeasurement {
@@ -16,7 +33,7 @@ impl NewportModel835PowerMeterMeasurement {
 
 // Define a global variable mapping the Newport Model 835 Power Meter ranges to their associated fullscale uncertainties.
 lazy_static! {
-    pub static ref NEWPORT_MODEL_835_POWER_METER_FULLSCALE_UNCERTAINTIES: HashMap<NewportModel835PowerMeterRange, f64> = {
+    static ref NEWPORT_MODEL_835_POWER_METER_FULLSCALE_UNCERTAINTIES: HashMap<NewportModel835PowerMeterRange, f64> = {
         let mut map: HashMap<NewportModel835PowerMeterRange, f64> = HashMap::new();
         map.insert(NewportModel835PowerMeterRange::Twonanowatts, 0.002);
         map.insert(NewportModel835PowerMeterRange::Twentynanowatts, 0.0005);
@@ -30,7 +47,7 @@ lazy_static! {
 
 // Define a global variable mapping the Newport Model 835 Power Meter ranges to their associated reading uncertainties.
 lazy_static! {
-    pub static ref NEWPORT_MODEL_835_POWER_METER_READING_UNCERTAINTIES: HashMap<NewportModel835PowerMeterRange, f64> = {
+    static ref NEWPORT_MODEL_835_POWER_METER_READING_UNCERTAINTIES: HashMap<NewportModel835PowerMeterRange, f64> = {
         let mut map: HashMap<NewportModel835PowerMeterRange, f64> = HashMap::new();
         map.insert(NewportModel835PowerMeterRange::Twonanowatts, 0.004);
         map.insert(NewportModel835PowerMeterRange::Twentynanowatts, 0.004);
@@ -44,7 +61,7 @@ lazy_static! {
 
 // Define the possible ranges that can be displayed on the Newport 835 power meter. These are relevant for determining measurement uncertainty.
 #[derive(Debug, Hash, Eq, PartialEq)]
-pub enum NewportModel835PowerMeterRange {
+enum NewportModel835PowerMeterRange {
     Twonanowatts,
     Twentynanowatts,
     Twohundrednanowatts,
@@ -53,40 +70,48 @@ pub enum NewportModel835PowerMeterRange {
     Twohundredmilliwatts,
 }
 
-// Implement a method to 
+// Implement a method to
 impl NewportModel835PowerMeterRange {
     fn get_range(value: &f64) -> NewportModel835PowerMeterRange {
         // Find the range the power measurement is in
         match *value {
-            x if x >= 0.0 && x <= 0.000000002 => NewportModel835PowerMeterRange::Twonanowatts,
-            x if x > 0.000000002 && x <= 0.000000020 => NewportModel835PowerMeterRange::Twentynanowatts,
-            x if x > 0.000000020 && x <= 0.000000200 => NewportModel835PowerMeterRange::Twohundrednanowatts,
+            x if (0.0..=0.000000002).contains(&x) => NewportModel835PowerMeterRange::Twonanowatts,
+            x if x > 0.000000002 && x <= 0.000000020 => {
+                NewportModel835PowerMeterRange::Twentynanowatts
+            }
+            x if x > 0.000000020 && x <= 0.000000200 => {
+                NewportModel835PowerMeterRange::Twohundrednanowatts
+            }
             x if x > 0.000000200 && x <= 0.002 => NewportModel835PowerMeterRange::Twomilliwatts,
             x if x > 0.002 && x <= 0.020 => NewportModel835PowerMeterRange::Twentymilliwatts,
             x if x > 0.020 && x <= 0.200 => NewportModel835PowerMeterRange::Twohundredmilliwatts,
-            _ => panic!("oops")
+            _ => panic!("oops"),
         }
-        
     }
 }
 
 // Implement measurement for Newport 835 power meter measurements
 impl Measurement<f64> for NewportModel835PowerMeterMeasurement {
-    fn value(&self) -> f64 {
-        self.value
+    fn value(&self) -> &f64 {
+        &self.value
     }
 }
 
 // Implement absolute uncertainty for newport model 835 power meter.
-impl AbsoluteUncertainty<NewportModel835PowerMeterMeasurement, f64> for NewportModel835PowerMeterMeasurement {
+impl AbsoluteUncertainty<f64> for NewportModel835PowerMeterMeasurement {
     fn uncertainty(&self) -> f64 {
+        let value = &self.value;
         // Determine the power reading scale we are working with
         let range = NewportModel835PowerMeterRange::get_range(&self.value);
         // Determine the associated fractional fullscaleuncertainty of this power scale.
-        let fullscale_frac_uncertainty = *NEWPORT_MODEL_835_POWER_METER_FULLSCALE_UNCERTAINTIES.get(&range).unwrap();
+        let fullscale_frac_uncertainty = NEWPORT_MODEL_835_POWER_METER_FULLSCALE_UNCERTAINTIES
+            .get(&range)
+            .unwrap();
         // Determine the associated reading fractional uncertainty of this power scale.
-        let reading_frac_uncertainty = *NEWPORT_MODEL_835_POWER_METER_READING_UNCERTAINTIES.get(&range).unwrap();
+        let reading_frac_uncertainty = NEWPORT_MODEL_835_POWER_METER_READING_UNCERTAINTIES
+            .get(&range)
+            .unwrap();
         // Compute and return the absolute uncertainty
-        self.value*(fullscale_frac_uncertainty + reading_frac_uncertainty)
+        value * (fullscale_frac_uncertainty + reading_frac_uncertainty)
     }
 }

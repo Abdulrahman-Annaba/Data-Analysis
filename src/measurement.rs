@@ -1,5 +1,5 @@
-mod thorlabspm100a;
+mod angles;
 mod newportmodel835powermeter;
-mod measurement;
-#[cfg(test)]
+pub mod power_measurement;
 mod tests;
+mod thorlabspm100a;
