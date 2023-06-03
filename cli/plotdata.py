@@ -7,15 +7,20 @@ import click
 import matplotlib.pyplot as plt
 
 # Import modules from the data analysis module
-import data_analysis.data_computation, data_analysis.data_extraction, data_analysis.data_plotting
+import data_analysis.data_computation
+import data_analysis.data_extraction
+import data_analysis.data_plotting
 import data_analysis.theory as theoretical
 # Define a CLI command, and the valid options. Most of these are self-explanatory. For every option, there is an associated parameter in the actual function below.
+
+
 @click.command()
 @click.option(
     '-t', '--trial',
     multiple=True,
     required=True,
-    type=(click.Path(exists=True, dir_okay=True, readable=True, path_type=Path), str),
+    type=(click.Path(exists=True, dir_okay=True,
+          readable=True, path_type=Path), str),
     help="A 2-tuple, consisting of Trial folder path and desired trial label. You can pass this option multiple times to plot multiple trials. Trial folder must contain a data.csv file and a computation_parameters.csv file. Example formatting for these files is available at https://github.com/Abdulrahman-Annaba/Data-Analysis."
 )
 @click.option(
@@ -23,7 +28,8 @@ import data_analysis.theory as theoretical
     nargs=1,
     type=click.FLOAT,
     multiple=True,
-    help="The grating angle to include in the plots. By default, it includes all the angles found in the dataset. Add the flag multiple times to add each grating angle of interest."
+    default=None,
+    help="The grating angle to include in the plots. By default, it includes all the angles found in a dataset. Specify the flag multiple times to add each grating angle of interest."
 )
 @click.option(
     '--grating-plot/--no-grating-plot',
@@ -81,7 +87,7 @@ import data_analysis.theory as theoretical
 )
 def main(
     trial: Tuple[Tuple[Path, str]],
-    grating_angle: Tuple[float],
+    grating_angle: Union[Tuple[float], None],
     grating_plot: bool,
     mirror_plot: bool,
     power_plot: bool,
@@ -100,31 +106,32 @@ def main(
     python main.py --show-figure --reuse-figure --scale 1000000 -t path/to/trial_1_folder "1st Trial" -t path/to/trial_2_folder "2nd Trial" -g -50 -g 0 -g 50
     """
 
-    # If we have multiple grating angles, return the unique ones and sort them
-    grating_angle_absent = False
-    if len(grating_angle) > 0:
-        grating_angle = list(set(grating_angle))
+    # If we have multiple grating angles, return the unique ones and sort them. If it's None (the default), just pass
+    if grating_angle is None:
+        pass
+    else:
+        grating_angle: List[float] = list(set(grating_angle))
         grating_angle.sort()
         grating_angle = tuple(grating_angle)
-    # If no grating angles were passed in, switch a flag
-    else:
-        grating_angle_absent = True
     # If we have multiple trials, return the ones that are unique: ie, no repeating trial folder AND name
     if len(trial) > 1:
         trial = tuple(set(trial))
-    
+
     # If we want to reuse the figures
     if reuse_figure:
-        (power_vs_mirror_angle_figure, efficiency_vs_mirror_angle_figure, efficiency_vs_incident_angle_figure) = (0, 1, 2)
+        (power_vs_mirror_angle_figure, efficiency_vs_mirror_angle_figure,
+         efficiency_vs_incident_angle_figure) = (0, 1, 2)
     # If we're going to make unique figures for each trial
     else:
         # compute number of figures needed
         number_of_figures = len(trial)*3
         # specify figure numbers for each type of plot
         power_vs_mirror_angle_figure = iter(range(0, int(number_of_figures/3)))
-        efficiency_vs_mirror_angle_figure = iter(range(int(number_of_figures/3), int(2*number_of_figures/3)))
-        efficiency_vs_incident_angle_figure = iter(range(int(2*number_of_figures/3), int(number_of_figures)))
-    
+        efficiency_vs_mirror_angle_figure = iter(
+            range(int(number_of_figures/3), int(2*number_of_figures/3)))
+        efficiency_vs_incident_angle_figure = iter(
+            range(int(2*number_of_figures/3), int(number_of_figures)))
+
     # Loop over the trials provided
     for ind_trial in trial:
         # Get the trial folder path and the trial label
@@ -137,40 +144,51 @@ def main(
             )
             # If we want theoretical values, initialize the theoretical gratings.
             if theory:
-                grating = data_analysis.data_extraction.extract_grating_info(trial_folder)
+                grating = data_analysis.data_extraction.extract_grating_info(
+                    trial_folder)
                 spr_angles = grating.spr_angles(10)
                 woods = grating.woods_anomaly_angles(10)
             # Compute the powers vs mirror angles data
-            power_vs_mirror_angle = trial_instance.compute_powers_vs_mirror_angle(grating_angles_to_use=grating_angle, power_scale_factor=scale)
+            power_vs_mirror_angle = trial_instance.compute_powers_vs_mirror_angle(
+                grating_angles_to_use=grating_angle, power_scale_factor=scale)
             # Compute the efficiency vs mirror angle data
-            efficiency_vs_mirror_angle = trial_instance.compute_efficiency_vs_mirror_angle(grating_angles_to_use=grating_angle)
+            efficiency_vs_mirror_angle = trial_instance.compute_efficiency_vs_mirror_angle(
+                grating_angles_to_use=grating_angle)
             # Compute the efficiency vs incident angle data
-            efficiency_vs_incident_angle = trial_instance.compute_efficiency_vs_incident_angle(grating_angles_to_use=grating_angle)
+            efficiency_vs_incident_angle = trial_instance.compute_efficiency_vs_incident_angle(
+                grating_angles_to_use=grating_angle)
             # If we don't want to reuse the figures for the given trials, get the next valid figure number for each plot and plot.
             if not reuse_figure:
                 if power_plot:
-                    data_analysis.data_plotting.plot_powers_vs_mirror_angle(power_vs_mirror_angle, next(power_vs_mirror_angle_figure), label_prefix=f"{trial_instance.trial_label}: ")
+                    data_analysis.data_plotting.plot_powers_vs_mirror_angle(power_vs_mirror_angle, next(
+                        power_vs_mirror_angle_figure), label_prefix=f"{trial_instance.trial_label}: ")
                 if mirror_plot:
-                    data_analysis.data_plotting.plot_efficiency_vs_mirror_angle(efficiency_vs_mirror_angle, next(efficiency_vs_mirror_angle_figure), label_prefix=f"{trial_instance.trial_label}: ")
+                    data_analysis.data_plotting.plot_efficiency_vs_mirror_angle(efficiency_vs_mirror_angle, next(
+                        efficiency_vs_mirror_angle_figure), label_prefix=f"{trial_instance.trial_label}: ")
                 if grating_plot:
                     if theory:
-                        data_analysis.data_plotting.plot_efficiency_vs_incident_angle(efficiency_vs_incident_angle, next(efficiency_vs_incident_angle_figure), label=trial_instance.trial_label, spr_angles=spr_angles, woods=woods, title=title)
+                        data_analysis.data_plotting.plot_efficiency_vs_incident_angle(efficiency_vs_incident_angle, next(
+                            efficiency_vs_incident_angle_figure), label=trial_instance.trial_label, spr_angles=spr_angles, woods=woods, title=title)
                     else:
-                        data_analysis.data_plotting.plot_efficiency_vs_incident_angle(efficiency_vs_incident_angle, next(efficiency_vs_incident_angle_figure), label=trial_instance.trial_label, title=title)
+                        data_analysis.data_plotting.plot_efficiency_vs_incident_angle(efficiency_vs_incident_angle, next(
+                            efficiency_vs_incident_angle_figure), label=trial_instance.trial_label, title=title)
             else:
                 # Just plot the data on the same figure
                 if power_plot:
-                    data_analysis.data_plotting.plot_powers_vs_mirror_angle(power_vs_mirror_angle, power_vs_mirror_angle_figure, label_prefix=f"{trial_instance.trial_label}: ")
+                    data_analysis.data_plotting.plot_powers_vs_mirror_angle(
+                        power_vs_mirror_angle, power_vs_mirror_angle_figure, label_prefix=f"{trial_instance.trial_label}: ")
                 if mirror_plot:
-                    data_analysis.data_plotting.plot_efficiency_vs_mirror_angle(efficiency_vs_mirror_angle, efficiency_vs_mirror_angle_figure, label_prefix=f"{trial_instance.trial_label}: ")
+                    data_analysis.data_plotting.plot_efficiency_vs_mirror_angle(
+                        efficiency_vs_mirror_angle, efficiency_vs_mirror_angle_figure, label_prefix=f"{trial_instance.trial_label}: ")
                 if grating_plot:
                     if theory:
-                        data_analysis.data_plotting.plot_efficiency_vs_incident_angle(efficiency_vs_incident_angle, efficiency_vs_incident_angle_figure, label=trial_instance.trial_label, spr_angles=spr_angles, woods=woods, title=title)
+                        data_analysis.data_plotting.plot_efficiency_vs_incident_angle(
+                            efficiency_vs_incident_angle, efficiency_vs_incident_angle_figure, label=trial_instance.trial_label, spr_angles=spr_angles, woods=woods, title=title)
                     else:
-                        data_analysis.data_plotting.plot_efficiency_vs_incident_angle(efficiency_vs_incident_angle, efficiency_vs_incident_angle_figure, label=trial_instance.trial_label, title=title)
+                        data_analysis.data_plotting.plot_efficiency_vs_incident_angle(
+                            efficiency_vs_incident_angle, efficiency_vs_incident_angle_figure, label=trial_instance.trial_label, title=title)
         # To prevent multiple plots of the theoretical values
         theory = False
-
 
     # Show the figures, if requested.
     if show_figure:

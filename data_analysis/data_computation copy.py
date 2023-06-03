@@ -1,37 +1,49 @@
 """Module focused on computing the provided data and providing the arrays (to be plotted)"""
 
+# Import some standard libraries for computation
 import numpy as np
 import pandas as pd
 
+# Import our Polarization and Label definitions
+from data_analysis.experiment.definitions import PolarizationState, PowerMeterLabel
+
+# Import our power meters and the abstraction
+from data_analysis.measurement.newport_power_meter import NewportModel835PowerMeterMeasurements
+from data_analysis.measurement.thorlabs_power_meter import ThorLabsPM100A_S120VC_PowerMeterMeasurement
+from data_analysis.measurement.measurement_definitions import Measurements
+
 
 class Trial:
-    """A class to compute the data from each trial. Useful for fewer changes in code when changing experiment parameters."""
+    """A class to compute the data from each trial."""
 
     # Defining some internal constants for the class
     _AVERAGE_MULTIPLIER = 5
+    """The multiplicative factor to use when computing a sequenced average"""
 
     _BIN_AVERAGE_BINS = np.array([10**i for i in range(-10, 11, 1)])
     """Defines the boundary values for each bin in a histogram. Each value is separated by a power of 10"""
 
     def __init__(self,
                  trial_label: str,
-                 full_data_set: np.array,
-                 incident_power_function,
-                 efficiency_function,
-                 slide_coefficients: pd.DataFrame,
-                 sensor_a_background: float,
-                 sensor_b_background: float,
-                 power_a_column: int = 1,
-                 power_b_column: int = 2,
-                 grating_angle_column: int = 3,
+                 full_data_set: np.ndarray,
+                 slide_coefficients: Slide,
+                 polarization_state: PolarizationState,
+                 transmitted_power_background: Measurements,
+                 reflected_power_background: Measurements,
+                 transmitted_power_column: int = 1,
+                 reflected_power_column: int = 2,
+                 incident_angle_column: int = 3,
                  mirror_angle_column: int = 4,
-                 grating_angle_offset: int = 0
                  ):
-        """Initializes the routine. The column parameters refer to the column positions in the numpy array to extract the corresponding values. Note that the efficiency function and the incident power function accept three arguments, the trial object itself, power_a, and power_b."""
+        """Creates a trial. The column parameters refer to the column positions in the numpy array to extract the corresponding values.
+
+        :param trial_label: The label to give the trial
+        :param full_data_set: The entire dataset containing all the data collected by the experimental apparatus. This should be a pandas dataframe which has no headers and in which each column can be found.
+        :param polarization_state: The polarization that was used in the experiment.
+        :param s
+        """
         self.data = full_data_set
         self.trial_label = trial_label
-        self.efficiency = efficiency_function
-        self.incident_power = incident_power_function
         self.power_a_column = power_a_column
         self.power_b_column = power_b_column
         self.grating_angle_column = grating_angle_column

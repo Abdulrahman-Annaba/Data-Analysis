@@ -1,8 +1,7 @@
-use crate::measurement::power_measurement::{AbsoluteUncertainty, Measurement};
 use lazy_static::lazy_static;
 use std::collections::HashMap;
 
-use super::power_measurement::{Background, PowerMeterLabel};
+use crate::measurement::power_measurement::traits::{AbsoluteUncertainty, Background, Measurement};
 
 // Defines a power measurement as read from a newport model 835 power meter
 pub struct NewportModel835PowerMeterMeasurement {
@@ -20,8 +19,8 @@ impl NewportModel835PowerMeterMeasurementBackground {
 }
 
 impl Background<f64> for NewportModel835PowerMeterMeasurementBackground {
-    fn background(&self) -> &f64 {
-        &self.0
+    fn background(&self) -> f64 {
+        self.0
     }
 }
 
@@ -92,8 +91,8 @@ impl NewportModel835PowerMeterRange {
 
 // Implement measurement for Newport 835 power meter measurements
 impl Measurement<f64> for NewportModel835PowerMeterMeasurement {
-    fn value(&self) -> &f64 {
-        &self.value
+    fn value(&self) -> f64 {
+        self.value
     }
 }
 
@@ -113,5 +112,28 @@ impl AbsoluteUncertainty<f64> for NewportModel835PowerMeterMeasurement {
             .unwrap();
         // Compute and return the absolute uncertainty
         value * (fullscale_frac_uncertainty + reading_frac_uncertainty)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_newport_measurement() {
+        // Measurement in watts
+        let measurement = 0.001;
+        // convert this into a newport measurement
+        let newport_measurement = NewportModel835PowerMeterMeasurement::new(measurement);
+        // Test value
+        assert_eq!(measurement, newport_measurement.value());
+        // Test uncertainty according to specification
+        let reading_frac_uncertainty = 0.0015;
+        let fullscale_frac_uncertainty = 0.0005;
+        let correct_measurement_uncertainty =
+            measurement * (reading_frac_uncertainty + fullscale_frac_uncertainty);
+        assert_eq!(
+            correct_measurement_uncertainty,
+            newport_measurement.uncertainty()
+        );
     }
 }

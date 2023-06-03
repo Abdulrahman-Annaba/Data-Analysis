@@ -1,9 +1,7 @@
-use std::{collections::HashMap, ops::Mul};
-
-use crate::measurement::power_measurement::{AbsoluteUncertainty, Measurement};
 use lazy_static::lazy_static;
+use std::collections::HashMap;
 
-use super::power_measurement::Background;
+use crate::measurement::power_measurement::traits::{AbsoluteUncertainty, Background, Measurement};
 
 // Define the mapping of uncertainty wavelength ranges to their corresponding fractional uncertainties
 lazy_static! {
@@ -73,8 +71,8 @@ pub struct ThorLabsPM100A_S120VC_PowerMeterMeasurement {
 pub struct ThorLabsPM100A_S120VC_PowerMeterMeasurementBackground(f64);
 
 impl Background<f64> for ThorLabsPM100A_S120VC_PowerMeterMeasurementBackground {
-    fn background(&self) -> &f64 {
-        &self.0
+    fn background(&self) -> f64 {
+        self.0
     }
 }
 // Here we define the constructor for this power measurement.
@@ -89,8 +87,8 @@ impl ThorLabsPM100A_S120VC_PowerMeterMeasurement {
 
 // Here we implement the measurement interface for the thorlabs power meter
 impl Measurement<f64> for ThorLabsPM100A_S120VC_PowerMeterMeasurement {
-    fn value(&self) -> &f64 {
-        &self.value
+    fn value(&self) -> f64 {
+        self.value
     }
 }
 
@@ -104,5 +102,28 @@ impl AbsoluteUncertainty<f64> for ThorLabsPM100A_S120VC_PowerMeterMeasurement {
             .unwrap();
         // Compute the absolute uncertainty
         value * frac_uncertainty
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_thorlabs_pm100a_s120vc_measurement() {
+        // Measurement in watts
+        let measurement = 0.01;
+        // Convert this into a thorlabs measurement
+        let thorlabs_measurement =
+            ThorLabsPM100A_S120VC_PowerMeterMeasurement::new(measurement, 637.8);
+        // Test value
+        assert_eq!(measurement, thorlabs_measurement.value());
+        // Test uncertainty according to specification
+        let frac_uncertainty = 0.03;
+        let correct_measurement_uncertainty = measurement * frac_uncertainty;
+        assert_eq!(
+            correct_measurement_uncertainty,
+            thorlabs_measurement.uncertainty()
+        );
     }
 }
