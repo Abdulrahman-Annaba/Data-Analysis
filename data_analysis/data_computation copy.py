@@ -3,11 +3,13 @@
 # Import some standard libraries for computation
 import numpy as np
 import pandas as pd
+from typing import Dict
 
 # Import our Polarization and Label definitions
 from data_analysis.experiment.definitions import PolarizationState, PowerMeterLabel
-
-# Import our power meters and the abstraction
+# Import our beam splitter
+from data_analysis.experiment.beam_splitter import BeamSplitter
+# Import our power meters and the interface definition
 from data_analysis.measurement.newport_power_meter import NewportModel835PowerMeterMeasurements
 from data_analysis.measurement.thorlabs_power_meter import ThorLabsPM100A_S120VC_PowerMeterMeasurement
 from data_analysis.measurement.measurement_definitions import Measurements
@@ -26,97 +28,64 @@ class Trial:
     def __init__(self,
                  trial_label: str,
                  full_data_set: np.ndarray,
-                 slide_coefficients: Slide,
+                 beam_splitter: BeamSplitter,
                  polarization_state: PolarizationState,
                  transmitted_power_background: Measurements,
                  reflected_power_background: Measurements,
-                 transmitted_power_column: int = 1,
-                 reflected_power_column: int = 2,
+                 transmitted_power_column: int,
+                 reflected_power_column: int,
                  incident_angle_column: int = 3,
                  mirror_angle_column: int = 4,
                  ):
         """Creates a trial. The column parameters refer to the column positions in the numpy array to extract the corresponding values.
 
         :param trial_label: The label to give the trial
-        :param full_data_set: The entire dataset containing all the data collected by the experimental apparatus. This should be a pandas dataframe which has no headers and in which each column can be found.
-        :param polarization_state: The polarization that was used in the experiment.
-        :param s
+        :param full_data_set: The entire dataset containing all the data collected by the experimental apparatus. This should be a numpy array which has no headers and in which each column specified in the class constructor can be found
+        :param beam_splitter: The beam splitter used in the trial
+        :param polarization_state: The polarization that was used in the trial
+        :param transmitted_power_background: The background power for the transmitted power meter
+        :param reflected_power_background: The background power for the reflected power meter
+        :param transmitted_power_column: The index used to find the transmitted power column in `full_data_set`
+        :param reflected_power_column: The index used to find the reflected power column in `full_data_set`
+        :param incident_angle_column: The index used to find the incident angles in `full_data_set`
+        :param mirror_angle_column: The index used to find the mirror angles in `full_data_set`
         """
-        self.data = full_data_set
         self.trial_label = trial_label
-        self.power_a_column = power_a_column
-        self.power_b_column = power_b_column
-        self.grating_angle_column = grating_angle_column
+        self.data = full_data_set
+        self.beam_splitter = beam_splitter
+        self.polarization = polarization_state
+        self.transmitted_background = transmitted_power_background
+        self.reflected_background = reflected_power_background
+        self.transmitted_column = transmitted_power_column
+        self.reflected_column = reflected_power_column
+        self.incident_angle_column = incident_angle_column
         self.mirror_angle_column = mirror_angle_column
-        self.grating_angle_offset = grating_angle_offset
-        self.slide_coefficients = slide_coefficients
-        self.sensor_a_background = sensor_a_background
-        self.sensor_b_background = sensor_b_background
 
     def compute_efficiency_vs_mirror_angle(self,
-                                           grating_angles_to_use=None,
+                                           incident_angles_to_use: np.ndarray = None, # type: ignore
                                            remove_unphysical_points: bool = False,
-                                           background_threshold: float = 0):
+                                           background_threshold: float = 0) -> Dict[float, np.ndarray]:
         """Computes the efficiency vs mirror angle for the given grating angles. The provided grating angles must be explicitly present in the data.
-
         If remove_unphysical_points is True, this removes the points that have efficiencies outside the domain [0, 1]. This defaults to False.
-        If background_threshold is provided, efficiencies below this number are omitted."""
-
-        # If no grating angles were explicitly provided in the method call, get all the grating angles in the data
-        if grating_angles_to_use is None:
-            grating_angles_to_use = np.unique(
-                self.data[:, self.grating_angle_column])
-        # Initialize a dictionary to return data in the form Grating angle: numpy array of powers vs. mirror angles
-        result = dict()
-        # Loop over grating angles
-        for grating_angle in grating_angles_to_use:
-            # Get a given grating angle's data
-            single_run = self.data[self.data[:,
-                                             self.grating_angle_column] == grating_angle]
-            # Get the unique mirror angles for the specific grating angles. Warning: This sorts the array, even though it might not be sorted in the data sheet
-            mirror_angles = np.unique(
-                single_run[:, self.mirror_angle_column], axis=0)
-
-            # Initialize a numpy array to place the averaged values for each grating angle. This initializes a 2D array with enough rows to include all mirror_angles, and with 4 columns: mirror angle, power a, power b, incident power
-            avg_powers_vs_mirror_angles = np.zeros((1, 3))
-
-            # Loop over mirror angles
-            for mirror_angle in mirror_angles:
-                # Get the data corresponding to a single mirror step. Warning: this assumes that the elements of the set of mirror angles in each grating angle set of data is unique.
-                single_step = single_run[single_run[:,
-                                                    self.mirror_angle_column] == mirror_angle]
-                # Get the powers
-                power_a = single_step[:, self.power_a_column]
-                power_b = single_step[:, self.power_b_column]
-                # Average the powers
-                avg_power_a = self._average(power_a)
-                avg_power_b = self._bin_average(power_b)
-                # Now stack the values into a 1x3 array and append it to avg_powers_vs_mirror_angles along the 0th axis
-                element = np.column_stack(
-                    (mirror_angle, avg_power_a, avg_power_b))
-                avg_powers_vs_mirror_angles = np.append(
-                    avg_powers_vs_mirror_angles, element, axis=0)
-
-            # Remove initialized value
-            avg_powers_vs_mirror_angles = avg_powers_vs_mirror_angles[1:]
-            # now compute efficiency
-            power_a = avg_powers_vs_mirror_angles[:, 1]
-            power_b = avg_powers_vs_mirror_angles[:, 2]
-            efficiency = self.efficiency(self, power_a, power_b)
-            # Now stack arrays together back into the right format
-            avg_efficiencies_vs_mirror_angles = np.column_stack(
-                (avg_powers_vs_mirror_angles[:, 0], efficiency))
-
-            result.update(
-                {
-                    f"{str(grating_angle-self.grating_angle_offset)}": avg_efficiencies_vs_mirror_angles
-                }
+        If background_threshold is provided, efficiencies below this number are omitted.
+        
+        :param incident_angles_to_use: A numpy 1D array of incident angles. The incident angles must be present in the dataset. Defaults to include all the incident angles present in the data.
+        :param remove_unphysical_points: Whether or not to remove datapoints which have efficiencies greater than 1 or less than 0. Default False.
+        :param background_threshold: A minimum value below which efficiencies will be ignored.
+        """
+        # Check type of `incident_angles_to_use`
+        if incident_angles_to_use is None:
+            incident_angles_to_use = np.unique(
+                self.data[:, self.incident_angle_column]
             )
-
-        return result
+        # Initialize the return value
+        result: Dict[float, np.ndarray] = dict()
+        # Loop over the incident angles
+        for incident_angle in incident_angles_to_use:
+            pass
 
     def compute_efficiency_vs_incident_angle(self,
-                                             grating_angles_to_use=None,
+                                             grating_angles_to_use: np.ndarray = None,
                                              remove_unphysical_points: bool = False,
                                              background_threshold: float = 0):
         """Computes the efficiency vs incident angle for the given grating angles. The provided grating angles must be explicitly present in the data.

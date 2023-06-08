@@ -54,7 +54,7 @@ class ThorLabsPM100A_S120VC_PowerMeterMeasurement:
 
     def abs_uncertainty(self) -> np.ndarray:
         """Computes the one-sided absolute uncertainties associated with the contained measurements."""
-        return self._frac_uncertainty * self.value
+        return self._frac_uncertainty * self.values()
 
 
 # Register this class as an implementation of Measurements

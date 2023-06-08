@@ -55,7 +55,7 @@ class NewportModel835PowerMeterMeasurements:
     def abs_uncertainty(self) -> np.ndarray:
         """Computes the one-sided absolute uncertainties associated with the contained measurements."""
         # Make the simple scalar function map against an array, then pass the array of measurements to obtain the ranges
-        ranges: np.ndarray = np.vectorize(self._get_range)(self.values)
+        ranges: np.ndarray = np.vectorize(self._get_range)(self.values())
         # For each range, obtain the associated fullscale fractional uncertainty.
         fullscale_frac_uncertainties: np.ndarray = np.vectorize(
             lambda range: NEWPORT_MODEL_835_POWER_METER_FULLSCALE_UNCERTANTIES.get(range))(ranges)
@@ -63,7 +63,7 @@ class NewportModel835PowerMeterMeasurements:
         reading_frac_uncertainties: np.ndarray = np.vectorize(
             lambda range: NEWPORT_MODEL_835_POWER_METER_READING_UNCERTANTIES.get(range))(ranges)
         # Finally, compute the absolute uncertainty.
-        return self.value * (fullscale_frac_uncertainties + reading_frac_uncertainties)
+        return self.values() * (fullscale_frac_uncertainties + reading_frac_uncertainties)
 
     @staticmethod
     def _get_range(measurement_value: float) -> NewportModel835PowerMeterRange:

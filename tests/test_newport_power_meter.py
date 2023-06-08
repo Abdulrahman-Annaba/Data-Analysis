@@ -15,7 +15,7 @@ def test_correct_measurement():
     newport_measurements = NewportModel835PowerMeterMeasurements(
         VALID_SET_OF_DIFFERENT_MEASUREMENTS)
     # Check if we can check our array
-    assert np.array_equal(newport_measurements.values,
+    assert np.array_equal(newport_measurements.values(),
                           VALID_SET_OF_DIFFERENT_MEASUREMENTS)
 
 
