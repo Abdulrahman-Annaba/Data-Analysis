@@ -3,6 +3,7 @@ import numpy as np
 from enum import Enum
 
 from data_analysis.measurement.measurement_definitions import Measurements
+from data_analysis.data_computation import NoAveragePossibleException
 
 
 class NewportModel835PowerMeterRange(Enum):
@@ -44,18 +45,27 @@ NEWPORT_MODEL_835_POWER_METER_READING_UNCERTANTIES = {
 class NewportModel835PowerMeterMeasurements:
     """Represents a set of Newport Model 835 Power Meter measurements"""
 
+    _BIN_AVERAGE_BINS = np.array([10**i for i in range(-10, 11, 1)])
+    """Defines the boundary values for each bin in a histogram. Each value is separated by a power of 10"""
+
     def __init__(self, values: np.ndarray):
         """Create a set of Newport Model 835 Power Meter measurements."""
         self.value = values
 
+    @property
     def values(self) -> np.ndarray:
         """Returns the contained measurements."""
         return self.value
 
+    @values.setter
+    def values(self, value):
+        """Sets the contained measurements to the specified value"""
+        self.value = value
+
     def abs_uncertainty(self) -> np.ndarray:
         """Computes the one-sided absolute uncertainties associated with the contained measurements."""
         # Make the simple scalar function map against an array, then pass the array of measurements to obtain the ranges
-        ranges: np.ndarray = np.vectorize(self._get_range)(self.values())
+        ranges: np.ndarray = np.vectorize(self._get_range)(self.values)
         # For each range, obtain the associated fullscale fractional uncertainty.
         fullscale_frac_uncertainties: np.ndarray = np.vectorize(
             lambda range: NEWPORT_MODEL_835_POWER_METER_FULLSCALE_UNCERTANTIES.get(range))(ranges)
@@ -63,7 +73,23 @@ class NewportModel835PowerMeterMeasurements:
         reading_frac_uncertainties: np.ndarray = np.vectorize(
             lambda range: NEWPORT_MODEL_835_POWER_METER_READING_UNCERTANTIES.get(range))(ranges)
         # Finally, compute the absolute uncertainty.
-        return self.values() * (fullscale_frac_uncertainties + reading_frac_uncertainties)
+        return self.values * (fullscale_frac_uncertainties + reading_frac_uncertainties)
+
+    def average(self) -> float:
+        """Computes the bin average of the provided data.
+
+        Raises NoAveragePossibleException if an average was not possible"""
+        # Map the power to the bin it resides in. Bins are specified via BIN_AVERAGE_BINS
+        digits = np.digitize(self.values, self._BIN_AVERAGE_BINS)
+        # Find the most frequent bin. This assumes there is only one most frequent bin.
+        unique_bins, counts = np.unique(digits, return_counts=True)
+        most_frequent_bin = unique_bins[np.argmax(counts)]
+        # Get the most frequent bin powers
+        most_frequent_powers = self.values[digits == most_frequent_bin]
+        # If there are no most frequent powers, raise NoAveragePossibleException. Otherwise, return the average power
+        if len(most_frequent_powers) == 0:
+            raise NoAveragePossibleException
+        return np.average(most_frequent_powers)  # type: ignore
 
     @staticmethod
     def _get_range(measurement_value: float) -> NewportModel835PowerMeterRange:

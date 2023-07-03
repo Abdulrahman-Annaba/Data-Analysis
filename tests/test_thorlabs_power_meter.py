@@ -10,7 +10,7 @@ def test_correct_measurement():
     wavelength = 637.8
     thorlabs_measurements = ThorLabsPM100A_S120VC_PowerMeterMeasurement(
         VALID_MEASUREMENT, wavelength)
-    assert np.array_equal(VALID_MEASUREMENT, thorlabs_measurements.values())
+    assert np.array_equal(VALID_MEASUREMENT, thorlabs_measurements.values)
 
 
 def test_correct_absolute_uncertainty():
