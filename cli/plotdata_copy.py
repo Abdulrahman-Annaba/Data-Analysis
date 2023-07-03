@@ -120,18 +120,17 @@ def main(
     # TODO: Finish features involving power plot and mirror angle plot
 
     # If we have multiple grating angles, return the unique ones and sort them. If it's None (the default), just pass
-
-    if incident_angle is None:
-        pass
+    if len(incident_angle) == 0:
+        incident_angle = None  # type: ignore
     else:
         incident_angle = list(set(incident_angle))  # type: ignore
         incident_angle.sort()
         incident_angle = tuple(incident_angle)  # type: ignore
+        incident_angle: np.ndarray = np.array(incident_angle)
     # If we have multiple trials, return the ones that are unique: ie, no repeating trial folder AND name
     if len(trial) > 1:
         trial = tuple(set(trial))
 
-    incident_angle: np.ndarray = np.array(incident_angle)
     # Make the CLI parameters dataclass
     # params = CliParams(trials=trial, incident_angles=incident_angle,
     #                    plot_incident_angle_plot=incident_angle_plot, plot_mirror_angle_plot=mirror_angle_plot, plot_power_plot=power_plot, power_plot_scale=scale, show_figures=show_figure, save_figures=save_figure, reuse_figures=reuse_figure, theory=theory, title=title, error=error)

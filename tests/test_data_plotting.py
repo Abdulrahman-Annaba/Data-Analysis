@@ -10,4 +10,3 @@ def test_plot_total_eff_vs_incident_angle():
 
     plotmod.plot_efficiency_vs_incident_angle(trial.compute_efficiency_vs_incident_angle(
     ), 0, trial.trial_label, "test plot", trial.compute_efficiency_error_vs_incident_angle(), grating.spr_angles(10), grating.woods_anomaly_angles(10))
-    plt.savefig("correct_output.svg", format='svg')

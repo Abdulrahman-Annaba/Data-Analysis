@@ -9,7 +9,7 @@ def test_plot_data_command():
     # Make CLI params
     params = CliParams(
         trials=((Path("../Trials/GR13-1205 (UP) (5)"), "Left, P"),),
-        incident_angles=np.array([], dtype=np.float64),
+        incident_angles=None,
         plot_incident_angle_plot=True,
         error=True,
         show_figures=True,

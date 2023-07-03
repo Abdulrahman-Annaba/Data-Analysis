@@ -96,6 +96,7 @@ def plot_efficiency_vs_incident_angle(data: np.ndarray, figure_number: int, seri
     figure.axes[0].set_ylim(bottom=0, top=1)
     plt.ylabel('efficiency')
     plt.legend()
+    plt.tight_layout()
 
 
 # def plot_powers_vs_mirror_angle(data: dict, figure_number: int, **kwargs):

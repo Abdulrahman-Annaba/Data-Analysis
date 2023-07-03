@@ -8,7 +8,6 @@ class InvalidPythonVersion(Exception):
 
 
 if __name__ == "__main__":
-    print(sys.version_info.major, sys.version_info.minor)
     if not (sys.version_info.major >= 3 and sys.version_info.minor >= 10):
         raise InvalidPythonVersion(
             "Python version 3.10 or higher is required to run this CLI.")
