@@ -29,15 +29,35 @@ class PlotGenerator:
 
     def __init__(self, cli_params: CliParams):
         self.params = cli_params
+        self.theory_already_plotted: Dict[int, bool] = dict()
 
     def plot_total_efficiency(self, data: np.ndarray, trial_label: str, title: str = None, error: np.ndarray = None, spr_angles: Dict[int, float] = None, woods: Dict[int, float] = None  # type: ignore
                               ):
         """Handles the business logic of plotting and saving the total efficiency vs incident angles"""
         fig_number = self._get_fig(
             "Total Efficiency vs. Incident Angle")
+        # Check if this figure has already had spr angles and woods lines plotted on it; if it has, don't call the plot function with the theoretical kwargs
+        try:
+            has_theory_already = self.theory_already_plotted[fig_number]
+        # If the key was not found, that means that this is the first figure we are plotting. Therefore, we should set has_theory_plotted to false
+        except KeyError:
+            has_theory_already = False
+        # Initialize dictionary of options to call plotting function; then check conditions and append appropriate values as necessary
+        kwargs = dict()
+        kwargs.update({"data": data})
+        kwargs.update({"figure_number": fig_number})
+        kwargs.update({"series_label": trial_label})
+        if title is not None:
+            kwargs.update({"title": title})
+        if error is not None:
+            kwargs.update({"error": error})
+        if not has_theory_already:
+            kwargs.update({"spr_angles": spr_angles})
+            kwargs.update({"woods": woods})
+            # Update internal state such that future plots don't add more theoretical predictions
+            self.theory_already_plotted.update({fig_number: True})
 
-        plot_efficiency_vs_incident_angle(
-            data, fig_number, series_label=trial_label, spr_angles=spr_angles, woods=woods, title=title, error=error)
+        plot_efficiency_vs_incident_angle(**kwargs)
         if self.params.save_figures:
             plt.figure(fig_number)
             plt.savefig(trial_label, format="svg")
@@ -68,11 +88,11 @@ class PlotGenerator:
         This accounts for reuse of figures
         """
         if self.params.reuse_figures:
-            # Try to find an existing plot for "Power". If none is available, make one
+            # Try to find an existing plot for label. If none is available, make one
             fig_labels: List[str] = plt.get_figlabels()
             fig_number = 0
             try:
-                fig_number = fig_labels.index(label)
+                fig_number = fig_labels.index(label) + 1
             except ValueError:
                 fig = plt.figure(label)
                 fig_number: int = fig.number  # type: ignore

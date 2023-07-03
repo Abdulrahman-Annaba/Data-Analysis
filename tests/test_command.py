@@ -37,3 +37,28 @@ def test_plot_data_command():
     invoker.add_command(cmds.ShowFigures(plot_gen))
     # Execute command
     invoker.execute_all_commands()
+
+
+def test_reuse_figure():
+    """Tests whether or not we can reuse figures properly"""
+    # Initialize params
+    trials = ((Path("../Trials/GR13-1205 (UP) (6)"), "S Polarization"),
+              (Path("../Trials/GR13-1205 (UP) (5)"), "P Polarization"))
+    params = CliParams(
+        trials,  # type: ignore
+        incident_angles=None,  # type: ignore
+        plot_incident_angle_plot=True,
+        error=True,
+        show_figures=True,
+        reuse_figures=True,
+        save_figures=False,
+        theory=True,
+        title="GR13-1205, Wavelength = 637.8 nm"
+    )
+    plot_gen = cmds.PlotGenerator(params)
+    # Get first figure
+    fig1 = plot_gen._get_fig("Total Efficiency vs. Incident Angle")
+    # Get same fig
+    fig2 = plot_gen._get_fig("Total Efficiency vs. Incident Angle")
+    # Should be the same
+    assert fig1 == fig2
